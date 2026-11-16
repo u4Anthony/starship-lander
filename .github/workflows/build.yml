@@ -1,0 +1,53 @@
+name: Build Mac and Windows Releases
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install pygame moderngl pyinstaller
+      - name: Build macOS App
+        run: |
+          pyinstaller --noconfirm --onefile --windowed \
+            --name "StarshipLander" \
+            --add-data "*.wav:." \
+            --add-data "*.mp3:." \
+            starship_lander.py
+      - name: Zip macOS App (preserves executable permissions)
+        run: cd dist && zip -r StarshipLander-macOS.zip StarshipLander.app
+      - name: Upload macOS Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: StarshipLander-macOS
+          path: dist/StarshipLander-macOS.zip
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install pygame moderngl pyinstaller
+      - name: Build Windows EXE
+        run: |
+          pyinstaller --noconfirm --onefile --windowed `
+            --name "StarshipLander" `
+            --add-data "*.wav;." `
+            --add-data "*.mp3;." `
+            starship_lander.py
+      - name: Upload Windows Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: StarshipLander-Windows
+          path: dist/StarshipLander.exe
